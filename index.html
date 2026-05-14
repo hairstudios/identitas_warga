@@ -3,81 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Laporan Data Warga</title>
+    <title>Laporan Warga - TXT Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Library untuk PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        /* Custom scrollbar untuk tabel pada mobile */
-        .table-container::-webkit-scrollbar {
-            height: 6px;
-        }
-        .table-container::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
-        @media print {
-            .no-print { display: none; }
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .table-container::-webkit-scrollbar { height: 6px; }
+        .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen font-sans text-slate-800">
+<body class="bg-slate-100 min-h-screen text-slate-800 p-2 sm:p-6">
 
-    <div class="max-w-6xl mx-auto px-4 py-8">
-        <!-- Header -->
-        <header class="mb-8 text-center sm:text-left no-print">
-            <h1 class="text-3xl font-bold text-indigo-700">Laporan Data Pendidikan Warga</h1>
-            <p class="text-slate-600 mt-2">KP. BONGKOR DESA CINTARAKYAT</p>
-            <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg inline-block text-sm text-amber-800 italic">
-                ✨ Data tersimpan otomatis di perangkat Anda (Browser).
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">Laporan Pendidikan Warga</h1>
+                    <p class="text-slate-500 text-sm">KP. BONGKOR DESA CINTARAKYAT</p>
+                </div>
+                <div class="flex flex-col gap-2 w-full md:w-auto">
+                    <button onclick="downloadAsTXT()" class="bg-slate-800 hover:bg-black text-white px-6 py-3 rounded-xl text-sm font-bold shadow-md transition flex items-center justify-center gap-2">
+                        📄 DOWNLOAD FILE LAPORAN (.TXT)
+                    </button>
+                    <button onclick="copyToWA()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl text-sm font-bold shadow-md transition flex items-center justify-center gap-2">
+                        💬 SALIN UNTUK WHATSAPP
+                    </button>
+                </div>
+            </div>
+            <div id="status-msg" class="hidden mt-4 text-center p-2 bg-green-100 text-green-700 rounded-lg text-xs font-bold">
+                Teks Berhasil Disalin!
             </div>
         </header>
 
-        <!-- Main Table Area -->
-        <div id="print-area" class="bg-white shadow-xl rounded-xl overflow-hidden border border-slate-200">
-            <!-- Header khusus PDF (Hanya muncul saat download PDF) -->
-            <div class="hidden block print:block p-6 border-b-2 border-indigo-100 text-center">
-                <h2 class="text-2xl font-bold uppercase tracking-wider">Laporan Pendidikan Terakhir Warga</h2>
-                <p class="text-lg">Alamat: KP. BONGKOR DESA CINTARAKYAT</p>
-                <div class="mt-2 h-1 bg-indigo-600 w-32 mx-auto"></div>
-            </div>
-
+        <div class="bg-white shadow-xl rounded-2xl overflow-hidden border border-slate-200">
             <div class="table-container overflow-x-auto">
                 <table class="w-full text-sm text-left border-collapse">
-                    <thead class="bg-indigo-600 text-white uppercase text-xs">
-                        <tr>
-                            <th class="px-4 py-4 border-b border-indigo-500 text-center w-12">No</th>
-                            <th class="px-4 py-4 border-b border-indigo-500 min-w-[200px]">Nama Lengkap</th>
-                            <th class="px-4 py-4 border-b border-indigo-500 min-w-[250px]">Alamat</th>
-                            <th class="px-2 py-4 border-b border-indigo-500 text-center w-24">RT</th>
-                            <th class="px-2 py-4 border-b border-indigo-500 text-center w-24">RW</th>
-                            <th class="px-4 py-4 border-b border-indigo-500 min-w-[180px]">Pendidikan Terakhir</th>
+                    <thead>
+                        <tr class="bg-slate-800 text-white">
+                            <th class="px-4 py-4 text-center border-r border-slate-700 w-12">No</th>
+                            <th class="px-4 py-4 border-r border-slate-700 min-w-[150px]">Nama</th>
+                            <th class="px-4 py-4 border-r border-slate-700 min-w-[200px]">Alamat</th>
+                            <th class="px-2 py-4 text-center border-r border-slate-700">RT/RW</th>
+                            <th class="px-4 py-4 min-w-[160px]">Pendidikan Terakhir</th>
                         </tr>
                     </thead>
-                    <tbody id="table-body">
-                        <!-- Rows will be generated by JS -->
+                    <tbody id="table-body" class="divide-y divide-slate-200">
+                        <!-- Diisi oleh JS -->
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center no-print">
-            <button onclick="downloadPDF()" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-full shadow-lg transform transition active:scale-95 flex items-center justify-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="C12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                SIMPAN & KIRIM SEBAGAI PDF
-            </button>
-            
-            <button onclick="clearAllData()" class="w-full sm:w-auto text-slate-500 hover:text-red-600 font-medium text-sm transition">
-                Reset Semua Data
+        <div class="mt-6 flex justify-center pb-10">
+            <button onclick="clearData()" class="text-slate-400 hover:text-red-500 text-xs font-medium transition flex items-center gap-1">
+                🗑️ Hapus Semua Isian
             </button>
         </div>
-        
-        <footer class="mt-12 text-center text-slate-400 text-xs no-print">
-            &copy; 2024 Data Kolektor - Siap di-deploy di GitHub Pages.
-        </footer>
     </div>
 
     <script>
@@ -90,41 +71,38 @@
             "Emun", "Hadi Sopian", "Abuy Jamhur", "Hermansyah"
         ];
 
-        const alamatDefault = "KP. BONGKOR DESA CINTARAKYAT";
-        const pendidikanOptions = ["SD/MI", "SMP", "SMA", "D1", "D2", "S1"];
-        const rtRwOptions = ["01", "02", "03", "04", "05", "06", "07", "08", "09"];
+        const storageKey = 'warga_report_txt_v1';
+        const alamatStatic = "KP. BONGKOR DESA CINTARAKYAT";
 
-        const storageKey = 'crud_warga_data';
-
-        // Inisialisasi Tabel
-        function initTable() {
+        function init() {
             const tbody = document.getElementById('table-body');
             const savedData = JSON.parse(localStorage.getItem(storageKey) || '{}');
 
             namaList.forEach((nama, index) => {
-                const rowId = index + 1;
-                const rowData = savedData[rowId] || { rt: '01', rw: '01', pendidikan: '' };
-
+                const id = index + 1;
+                const d = savedData[id] || { rt: '01', rw: '01', edu: '' };
+                
                 const tr = document.createElement('tr');
                 tr.className = index % 2 === 0 ? 'bg-white' : 'bg-slate-50';
                 tr.innerHTML = `
-                    <td class="px-4 py-3 border-b text-center font-medium text-slate-500">${rowId}</td>
-                    <td class="px-4 py-3 border-b font-semibold text-slate-700">${nama}</td>
-                    <td class="px-4 py-3 border-b text-slate-600">${alamatDefault}</td>
-                    <td class="px-2 py-3 border-b">
-                        <select onchange="saveData(${rowId}, 'rt', this.value)" class="w-full p-1 border rounded bg-white text-xs focus:ring-2 focus:ring-indigo-400 outline-none">
-                            ${rtRwOptions.map(opt => `<option value="${opt}" ${rowData.rt === opt ? 'selected' : ''}>${opt}</option>`).join('')}
-                        </select>
+                    <td class="px-4 py-3 text-center font-bold text-slate-400 border-r">${id}</td>
+                    <td class="px-4 py-3 font-bold text-slate-700 border-r">${nama}</td>
+                    <td class="px-4 py-3 text-slate-500 border-r text-[10px] uppercase">${alamatStatic}</td>
+                    <td class="px-2 py-2 border-r">
+                        <div class="flex items-center gap-1">
+                            <select onchange="updateData(${id}, 'rt', this.value)" class="bg-transparent text-xs font-bold text-slate-600">
+                                ${[1,2,3,4,5,6,7,8,9].map(n => `<option value="0${n}" ${d.rt == '0'+n ? 'selected' : ''}>0${n}</option>`).join('')}
+                            </select>
+                            <span>/</span>
+                            <select onchange="updateData(${id}, 'rw', this.value)" class="bg-transparent text-xs font-bold text-slate-600">
+                                ${[1,2,3,4,5,6,7,8,9].map(n => `<option value="0${n}" ${d.rw == '0'+n ? 'selected' : ''}>0${n}</option>`).join('')}
+                            </select>
+                        </div>
                     </td>
-                    <td class="px-2 py-3 border-b">
-                        <select onchange="saveData(${rowId}, 'rw', this.value)" class="w-full p-1 border rounded bg-white text-xs focus:ring-2 focus:ring-indigo-400 outline-none">
-                            ${rtRwOptions.map(opt => `<option value="${opt}" ${rowData.rw === opt ? 'selected' : ''}>${opt}</option>`).join('')}
-                        </select>
-                    </td>
-                    <td class="px-4 py-3 border-b">
-                        <select onchange="saveData(${rowId}, 'pendidikan', this.value)" class="w-full p-2 border rounded bg-white text-sm focus:ring-2 focus:ring-indigo-400 outline-none">
-                            <option value="">Pilih Pendidikan</option>
-                            ${pendidikanOptions.map(opt => `<option value="${opt}" ${rowData.pendidikan === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                    <td class="px-3 py-2">
+                        <select onchange="updateData(${id}, 'edu', this.value)" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-bold bg-white">
+                            <option value="">- Pilih -</option>
+                            ${["SD/MI", "SMP", "SMA", "D1", "D2", "S1"].map(opt => `<option value="${opt}" ${d.edu === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                         </select>
                     </td>
                 `;
@@ -132,46 +110,79 @@
             });
         }
 
-        // Simpan ke LocalStorage
-        function saveData(rowId, field, value) {
-            const currentData = JSON.parse(localStorage.getItem(storageKey) || '{}');
-            if (!currentData[rowId]) currentData[rowId] = {};
-            currentData[rowId][field] = value;
-            localStorage.setItem(storageKey, JSON.stringify(currentData));
+        function updateData(id, field, val) {
+            const data = JSON.parse(localStorage.getItem(storageKey) || '{}');
+            if (!data[id]) data[id] = { rt: '01', rw: '01', edu: '' };
+            data[id][field] = val;
+            localStorage.setItem(storageKey, JSON.stringify(data));
         }
 
-        // Hapus Data
-        function clearAllData() {
-            if (confirm('Apakah Anda yakin ingin menghapus semua isian?')) {
+        function downloadAsTXT() {
+            const savedData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+            let content = "LAPORAN PENDIDIKAN WARGA\n";
+            content += "LOKASI: KP. BONGKOR DESA CINTARAKYAT\n";
+            content += "TANGGAL: " + new Date().toLocaleDateString('id-ID') + "\n";
+            content += "------------------------------------------------------------\n";
+            content += "NO | NAMA                | RT/RW | PENDIDIKAN\n";
+            content += "------------------------------------------------------------\n";
+
+            namaList.forEach((nama, index) => {
+                const id = index + 1;
+                const d = savedData[id] || { rt: '01', rw: '01', edu: '-' };
+                const rtRw = `${d.rt}/${d.rw}`;
+                const edu = d.edu || "-";
+                
+                // Format padding agar kolom lurus di TXT
+                const pNama = nama.padEnd(20, ' ');
+                const pNo = id.toString().padEnd(2, ' ');
+                
+                content += `${pNo} | ${pNama} | ${rtRw} | ${edu}\n`;
+            });
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Laporan_Warga_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function copyToWA() {
+            const savedData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+            let text = "*LAPORAN PENDIDIKAN WARGA*\n";
+            text += "_KP. BONGKOR DESA CINTARAKYAT_\n\n";
+
+            namaList.forEach((nama, index) => {
+                const id = index + 1;
+                const d = savedData[id] || { rt: '01', rw: '01', edu: '-' };
+                if (d.edu) {
+                    text += `${id}. *${nama}* (RT${d.rt}/RW${d.rw}) : ${d.edu}\n`;
+                }
+            });
+
+            // Menyalin ke clipboard
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+
+            const msg = document.getElementById('status-msg');
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 3000);
+        }
+
+        function clearData() {
+            if(confirm('Hapus semua isian?')) {
                 localStorage.removeItem(storageKey);
                 window.location.reload();
             }
         }
 
-        // Fungsi Download PDF
-        function downloadPDF() {
-            const element = document.getElementById('print-area');
-            const opt = {
-                margin:       [0.5, 0.3],
-                filename:     'Laporan_Data_Warga_Bongkor.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-
-            // Tambahkan loading state
-            const btn = event.currentTarget;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = "Memproses PDF...";
-            btn.disabled = true;
-
-            html2pdf().set(opt).from(element).save().then(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
-        }
-
-        window.onload = initTable;
+        window.onload = init;
     </script>
 </body>
 </html>
